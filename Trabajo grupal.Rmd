@@ -1,0 +1,545 @@
+---
+title: "Trabajo Grupal"
+author: "Fabrizio Velasco"
+date: "12/5/2022"
+output: html_document
+---
+
+# Introducción y objetivos:
+ 
+El presente trabajo tiene como objetivo hacer un análisis exploratorio para saber si el crecimiento del PIB y el gasto de consumo final del gobierno general (%PIB) pueden afectar al gasto público en educación total (%PIB). Esta data fue extraída del Banco Mundial y tiene como unidad de análisis a los países.
+
+# Variables:
+
+Las variables dependiente elegida en esta ocasión es el Gasto Público en educación total (%PIB), y las independientes son el Crecimiento del PIB (%anual) y el Gasto en consumo final del gobierno en general (%PIB). Se seleccionó estas variables en términos del PIB para hacer un mejor análisis.
+
+- Dependiente:
+- GDE: Gasto público en educación total (%PIB) 
+
+- Independientes:
+- GDP: Crecimiento del PIB (%anual)
+- GFC: Gasto de consumo final del gobierno general (%PIB)
+
+```{r}
+library(rio)
+data <- import("https://github.com/fabriziovelasco/Trabajo-Grupal/blob/6638fbc8808527d453845ca50babead39ddf782d/Data_World_Bank_2016%20(1).xlsx?raw=t")
+```
+
+Haremos dos regresiones para ver si hay las variables independientes afectan a la dependiente
+
+
+# Regresión Lineal o Gaussiana:
+
+# Regresión 1:
+
+Analizar si la variable independiente Crecimiento del PIB, afecta a la variable dependiente Gasto Público en educación:
+
+```{r}
+class(data$GDE)
+class(data$GDP)
+```
+Cambios de factor a numeric
+
+```{r}
+data$GDE=as.numeric(data$GDE)
+data$GDP=as.numeric(data$GDP)
+```
+```{r}
+class(data$GDE)
+class(data$GDP)
+```
+Verificamos si hay N/AS y eliminamos:
+
+```{r}
+sum(is.na(data$GDE))
+sum(is.na(data$GDP))
+```
+```{r}
+data1 = data[complete.cases(data$GDE),]
+data1 = data[complete.cases(data$GDP),]
+```
+
+### Creamos un gráfico de dispersión:
+
+```{r}
+plot(data1$GDE,data1$GDP)
+```
+
+### Prueba de normalidad y correlación:
+
+```{r}
+library(nortest)
+lillie.test(data1$GDE)
+lillie.test(data1$GDP)
+```
+Ambos p-valores son menores a 0.05 por lo que no presentan normailidad y podemos continuar haciendo las pruebas de correlación con Spearman
+
+### Delimitamos cuáles serán las hipótesis para las pruebas de correlación:
+
+H0 = No existe correlación entre el Gasto público en educación total (%PIB) y Crecimiento anual del PIB
+H1 = Sí existe correlación entre el Gasto público en educación total (%PIB) y Crecimiento anual del PIB
+
+```{r}
+cor.test(data1$GDE, data1$GDP, method = c("spearman"))
+```
+El p-valor es mayor a 0.05 por lo que se acepta la Hipótesis nula y se demuestra que no hay correlación entre las dos variables por lo que no es necesario crear el modelo de regresión lineal
+
+### Modelo de regresión lineal:
+
+Las hipótesis para la prueba F son las siguientes:
+
+H0: El modelo de regresión no es válido
+
+H1: El modelo de regresión es válido 
+
+```{r}
+modelo1 <- lm(GDP~GDE, data=data)
+anova(modelo1)
+summary(modelo1)
+```
+El p-valor sigue siendo mayor a 0.05 por lo que nuevamente se acepta la hipótesis nula y se demuestra que no hay relación entre las variables, es decir que el GDP no explica el GDE
+
+# Regresión 2:
+
+Analizar si la variable indpendiente Gasto de consumo final del gobierno (%PIB), afecta a la variable dependiente Gasto Público en educación:
+
+```{r}
+class(data$GDE)
+class(data$GFC)
+```
+Cambios de factor a numeric
+
+```{r}
+data$GDE=as.numeric(data$GDE)
+data$GFC=as.numeric(data$GFC)
+```
+```{r}
+class(data$GDE)
+class(data$GFC)
+```
+Verificamos si hay N/AS y eliminamos:
+
+```{r}
+sum(is.na(data$GDE))
+sum(is.na(data$GFC))
+```
+```{r}
+data2 = data[complete.cases(data$GDE),]
+data2 = data[complete.cases(data$GFC),]
+```
+
+
+### Creamos un gráfico de dispersión:
+```{r}
+plot(data2$GDE,data2$GFC)
+```
+## Prueba de normalidad y correlación:
+
+```{r}
+library(nortest)
+lillie.test(data2$GDE)
+lillie.test(data2$GFC)
+```
+Ambos p-valores son menores a 0.05 por lo que no presentan normailidad y podemos continuar haciendo las pruebas de correlación con Spearman
+
+### Delimitamos cuáles serán las hipótesis para las pruebas de correlación:
+
+H0 = No existe correlación entre el Gasto público en educación total (%PIB) y el Gasto de consumo final del gobierno (%PIB)
+H1 = Sí existe correlación entre el Gasto público en educación total (%PIB) y el Gasto de consumo final del gobierno (%PIB)
+
+```{r}
+cor.test(data2$GDE, data2$GFC, method = c("spearman"))
+```
+En este caso, el p-valor es menor a 0.05 por lo que se rechaza la hipótesis nula y se asume que sí hay relación entre las dos variables, ahora procedeos a hacer el modelo de regresión lineal
+
+## Modelo de regresión lineal:
+
+Las hipótesis para la prueba F son las siguientes:
+
+- H0: El modelo de regresión no es válido
+- H1: El modelo de regresión es válido
+
+```{r}
+modelo2 <- lm(GFC~GDE, data=data2)
+anova(modelo2)
+summary(modelo2)
+```
+
+Como el p-valor es menor a 0.05 entonces rechazamos la H0, por lo que concluimos que el modelo sí es válido como modelo de predición, es decir, existe una relación lineal entre el Gasto público en educación total (%PIB) y el Gasto de consumo final del gobierno (%PIB)
+
+Como el coeficiente R-cuadrado ajustado es 0.4937, significa que este modelo de regresión explica en un 49.37% 
+
+### Ecuación:
+
+Y= 2.2329+3.2187*X
+
+### Gráfico de la ecuación:
+
+```{r}
+library(ggplot2)
+ggplot(data2, aes(x=GFC, y=GDE)) +
+  geom_point(colour="red") +  xlab("Gasto de consumo final del gobierno") +  ylab("Gasto total en educación (%PIB)") +
+  ggtitle("Modelo 2") +
+  theme_light()+ geom_smooth(method="lm", se = F)
+```
+# Regresión lineal multivariada:
+
+Ahora vamos a hacer una regresión lineal multivariada con las mismas variables, manteniendo El Gasto Público en educación total (GDE) como variable dependiente y Crecimiento del PIB (GDP) y Gasto en consumo final del gobierno general (GFC) como variables independientes:-
+
+```{r}
+library(stargazer)
+modelo3=formula(data$GDE~data$GDP+data$GFC)
+regresión1=lm(modelo3,data=data)
+stargazer(regresión1,type = "text")
+summary(regresión1)
+```
+Este modelo si aporta pues si p-valor es menor a 0.05, explica un 48.39% Sin embargo, la única variable que explica es el consumo final del gobierno general (GFC), pues su p-valor es menor a 0.05.  
+
+### Ecuación de la regresión:
+
+Gasto público en educación total = 2.05755 + 0.15243 GFC
+
+# Diagnósticos de regresión:
+
+### Linealidad:
+
+```{r}
+plot(regresión1, 1)
+```
+El análisis de linealidad no sale muy bien pues la linea roja no está cerca de la linea horizontal
+
+### Homocedasticidad:
+
+```{r}
+plot(regresión1, 3)
+library(lmtest)
+bptest(regresión1)
+```
+La probabilidad de homocedasticidad es muy baja pues tiene un p-valor menor a 0.05, por lo que se rechaza que este modelo tenga homocedasticidad
+
+### Normalidad de residuos:
+
+```{r}
+plot(regresión1, 2)
+shapiro.test(regresión1$residuals)
+```
+En este caso, la prueba de normalidad de residuos muestra un p-valor mayor a 0.05, lo cual está bien porque muestra que los residuos se distribuyen de manera normal , esto se ve expresado en el gráfico porque los valores están bien cerca de la línea diagonal
+
+### No multicolinealidad:
+
+```{r}
+library(DescTools)
+VIF(regresión1)
+```
+Como ninguna variable sale mayor a 5, ninguna es candidata a ser retirada y muestra que estas no están muy correlacionadas entre sí, es decir, muestra que estas no tratan de explicar el mismo fenómeno
+
+### Valores influyentes:
+
+```{r}
+plot(regresión1, 5)
+```
+El gráfico muestra que efectivamente hay valores atípicos que influyen negativamente en la regresión 
+
+
+# Análisis de conglomerados:
+
+
+```{r}
+list(names(data))
+```
+Nos quedamos solo con los datos que necesitamos
+
+```{r}
+data3 = data[,c(1,6,10,11)]
+```
+```{r}
+library(readr)
+str(data3)
+summary(data3)
+```
+Verificando distribución:
+
+```{r}
+boxplot(data3[,-1])
+
+library(BBmisc)
+boxplot(normalize(data3[,-1],method='range',range=c(0,1)))
+```
+```{r}
+data3[,-1]=normalize(data3[,-1],method='standardize')
+data3=data3[complete.cases(data3),]
+
+summary(data3)
+```
+Correlaciones:
+
+```{r}
+cor(data3[,-1])
+```
+Cambio de monotonía:
+
+```{r}
+data3$GDP=-1*data3$GDP
+
+cor(data3[,-1])
+```
+
+Preparamos la data para la clusterización:
+
+```{r}
+dataClus=data3[,-1]
+row.names(dataClus)=data3$`Country Name`
+```
+
+# Clusterización:
+
+Calcular distancia entre los casos:
+
+```{r}
+library(cluster)
+g.dist = daisy(dataClus, metric="gower")
+```
+
+Pondremos cuatro clusters:
+
+```{r}
+set.seed(123)
+pam.resultado=pam(g.dist,4,cluster.only = F)
+dataClus$pam=pam.resultado$cluster
+```
+
+Exploración de resultados:
+
+```{r}
+aggregate(.~ pam, data=dataClus,mean)
+```
+
+Recodificamos las etiquetas del cluster:
+
+```{r}
+original=aggregate(.~ pam, data=dataClus,mean)
+original[order(original$GDE),]
+```
+
+Se va a recodificar los clusters en función del GDE (Gasto Público en Educación Total), se tomo está decisión porque es la variable dependiente y la que más nos interesa analizar
+
+```{r}
+dataClus$pam=dplyr::recode(dataClus$pam, `3` = 1, `1`=2,`4`=3,`2`=4)
+```
+
+# Estrategia jerárquica:
+
+## Estrategia jerárquica aglomerativa:
+
+El linkage que se usará es Ward
+
+```{r}
+set.seed(123)
+library(factoextra)
+
+res.agnes<- hcut(g.dist, k = 4,hc_func='agnes',hc_method = "ward.D")
+
+dataClus$agnes=res.agnes$cluster
+```
+
+```{r}
+aggregate(.~ agnes, data=dataClus,mean)
+```
+ 
+Recodificamos el cluster para que este ordenado:
+
+```{r}
+original=aggregate(.~ agnes, data=dataClus,mean)
+original[order(original$GDE),]
+```
+
+
+```{r}
+dataClus$agnes=dplyr::recode(dataClus$agnes, `1` = 1, `3`=2,`2`=3,`4`=4)
+```
+
+### Visualización:
+
+```{r}
+fviz_dend(res.agnes, cex = 0.7, horiz = T)
+```
+
+## Estrategia jerárquica divisiva:
+
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T)
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+```
+
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2)
+```
+```{r}
+base= ggplot(dataClus,aes(x=dim1, y=dim2)) +  coord_fixed()
+base + geom_point(size=2, aes(color=as.factor(pam)))  + labs(title = "PAM") 
+
+base + geom_point(size=2, aes(color=as.factor(agnes))) + labs(title = "AGNES")
+
+base + geom_point(size=2, aes(color=as.factor(agnes))) + labs(title = "DIANA")
+```
+
+# Conglomerados por Densidad:
+
+```{r}
+###pam
+set.seed(123)
+grupos=4
+res.pam=pam(g.dist,k = grupos,cluster.only = F)
+dataClus$pam=res.pam$cluster
+
+###agnes
+res.agnes<- hcut(g.dist, k =grupos,hc_func='agnes',hc_method = "ward.D")
+dataClus$agnes=res.agnes$cluster
+
+### diana
+res.diana <- hcut(g.dist, k = grupos,hc_func='diana')
+dataClus$diana=res.diana$cluster
+```
+
+```{r}
+fviz_silhouette(res.pam)
+```
+
+```{r}
+fviz_silhouette(res.agnes)
+```
+```{r}
+fviz_silhouette(res.diana)
+```
+```{r}
+original=aggregate(.~ diana, data=dataClus,mean)
+original[order(original$GDE),]
+```
+```{r}
+proyeccion = cmdscale(g.dist, k=2,add = T) 
+dataClus$dim1 <- proyeccion$points[,1]
+dataClus$dim2 <- proyeccion$points[,2]
+base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus))) 
+base + geom_text(size=2, aes(color=as.factor(diana)))  + labs(title = "DIANA") 
+```
+
+# Clusterización 2:
+
+En este caso de clusterización utilizaremos otras variables,veremos la lista de variables y seleccionaremos las que usaremos:
+
+```{r}
+list(names(data))
+```
+En esta ocasión mantendremos la variable dependiente, Gasto del gobierno en educación (%PIB) y cambiaremos las variables independientes por la tasa de fertilidad adolescente (ARF)  y el desempleo total (UET):
+
+```{r}
+data4 = data[,c(1,5,6,8)]
+```
+
+Vemos el tipo de variables:
+
+```{r}
+str(data4)
+```
+Las variables ARF y UET están como tipo character así que debemos cambiarlas por numeric:
+
+```{r}
+data4$ARF=as.numeric(data4$ARF)
+data4$UET=as.numeric(data4$UET)
+```
+AHora que ya está bien codificado hacemos un summary y un boxplot:
+
+```{r}
+summary(data4)
+boxplot(data4[,-1])
+```
+Como el gráfico sale mal debemos transformar los datos:
+
+```{r}
+boxplot(normalize(data4[,-1],method='range',range=c(0,1)))
+```
+```{r}
+data4[,-1]=normalize(data4[,-1],method='standardize')
+data4=data4[complete.cases(data4),]
+summary(data4)
+```
+- Correlaciones:
+
+```{r}
+cor(data4[,-1])
+```
+- Cambio de monotonía:
+
+```{r}
+data4$ARF=-1*data4$ARF
+cor(data4[,-1])
+```
+- Preparamos la data para la clusterización:
+
+```{r}
+dataClus2=data4[,-1]
+row.names(dataClus2)=data4$`Country Name`
+```
+
+# Análisis factorial:
+
+```{r}
+str(data)
+
+data5 = data[,c(1,3,5:14)]
+data5[,-1]=lapply(data5[,-1],as.numeric)
+```
+
+### Matriz de correlación:
+
+```{r}
+dontselect=c("Country Name")
+select=setdiff(names(data5),dontselect) 
+theData=data5[,select]
+```
+
+```{r}
+library(polycor)
+corMatrix=polycor::hetcor(theData)$correlations
+```
+
+Correlaciones:
+
+```{r}
+library(ggcorrplot)
+ggcorrplot(corMatrix)
+```
+- ¿Se peden factorizar los datos?
+
+```{r}
+library(psych)
+psych::KMO(corMatrix) 
+```
+verificar la matriz de las correlaciones:
+
+```{r}
+cortest.bartlett(corMatrix,n=nrow(theData))$p.value>0.05
+```
+- ¿En cuantas variables latentes se puede redimensionar la data?
+
+```{r}
+fa.parallel(theData,fm = 'ML', fa = 'fa',correct = T)
+```
+Redimensionamos al menor número de factores:
+
+```{r}
+library(GPArotation)
+resfa <- fa(theData,
+            nfactors = 1,
+            cor = 'mixed',
+            rotate = "varimax",
+            fm="minres")
+print(resfa$loadings)
+```
+```{r}
+print(resfa$loadings,cutoff = 0.5)
+fa.diagram(resfa)
+```
+
