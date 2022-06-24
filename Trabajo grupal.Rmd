@@ -425,64 +425,6 @@ base= ggplot(dataClus,aes(x=dim1, y=dim2,label=row.names(dataClus)))
 base + geom_text(size=2, aes(color=as.factor(diana)))  + labs(title = "DIANA") 
 ```
 
-# Clusterización 2:
-
-En este caso de clusterización utilizaremos otras variables,veremos la lista de variables y seleccionaremos las que usaremos:
-
-```{r}
-list(names(data))
-```
-En esta ocasión mantendremos la variable dependiente, Gasto del gobierno en educación (%PIB) y cambiaremos las variables independientes por la tasa de fertilidad adolescente (ARF)  y el desempleo total (UET):
-
-```{r}
-data4 = data[,c(1,5,6,8)]
-```
-
-Vemos el tipo de variables:
-
-```{r}
-str(data4)
-```
-Las variables ARF y UET están como tipo character así que debemos cambiarlas por numeric:
-
-```{r}
-data4$ARF=as.numeric(data4$ARF)
-data4$UET=as.numeric(data4$UET)
-```
-AHora que ya está bien codificado hacemos un summary y un boxplot:
-
-```{r}
-summary(data4)
-boxplot(data4[,-1])
-```
-Como el gráfico sale mal debemos transformar los datos:
-
-```{r}
-boxplot(normalize(data4[,-1],method='range',range=c(0,1)))
-```
-```{r}
-data4[,-1]=normalize(data4[,-1],method='standardize')
-data4=data4[complete.cases(data4),]
-summary(data4)
-```
-- Correlaciones:
-
-```{r}
-cor(data4[,-1])
-```
-- Cambio de monotonía:
-
-```{r}
-data4$ARF=-1*data4$ARF
-cor(data4[,-1])
-```
-- Preparamos la data para la clusterización:
-
-```{r}
-dataClus2=data4[,-1]
-row.names(dataClus2)=data4$`Country Name`
-```
-
 # Análisis factorial:
 
 ```{r}
